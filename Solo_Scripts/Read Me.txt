@@ -1,0 +1,117 @@
+Read Me:
+
+This script takes video data from a walking fish (Polypterus Senegalus), segments the fish, tracks its change in angles, and supplies the change in angles as a sine wave to revolute joints which cause the simulation of the fish to move (simscape).
+
+The files are:
+1. MidliningFish_Run1
+	This file takes labels you provide (co-ordinates of a mask), calculates a midline for them, and saves them as coordinates in a .txt file for further processing. The generation of the midline is fundamental to using this model.
+	The midline is generated using the 'Better Skeletonization' method, source: Nicholas Howe (2024). Better Skeletonization (https://www.mathworks.com/matlabcentral/fileexchange/11123-better-skeletonization), MATLAB Central File Exchange. Retrieved September 5, 2024.
+
+Inputs:
+	* the original video that was then sampled
+	* framefreq (the frequency with which you've sampled your frames)
+	* labels (path to folder)
+	* images (path to folder) 
+	* output folder (path to folder)
+	* path to an output video file name (must end with .mp4)
+
+Outputs:
+	* overlaid midline images
+	* midline coordinates
+	* output video with the midline of the fish overlaid onto it
+
+NOTE: this code does NOT work well on images of the fish where the fins are included in the mask. Please clean fins from your labels. The fins are modelled to move wrt the head, so they will appear weirdly for smaller choices of segment number.
+
+
+2. MaskingFish_Run2 (running this is optional)
+	This file takes the midlined images you generated and overlays the mask (labels) you'd previously input over it. This is used for error detection, to see if your mask has been incorrectly generated.
+
+Inputs:
+	*Previous files (still saved to the workspace)
+	*outputVideoFile (again, you must create a path to an output video file name)
+	*Midline images (from previous file's output. Simply click on overlayFolder and copy its filepath into your file explorer)
+
+Outputs:
+	*Overlaid video of the fish, mask, and midline
+	*Overlaid images of the fish, mask, and midline
+
+3. SegmentingFish_Run3
+	*Divides your fish into however many segments you want (note that the head is considered a 'special' segment, and so its length is fixed (scalable through the variable 'headsize_factor). This script takes the midline coordinates generated in script 1, and segments them evenly using the function FindEquidistantPointsScript. It draws straight lines between the points and returns a video of the fish with the segmented midline overlaid onto it. Additionally, it calculates the angles between each segment and saves them under the variable 'alpha'. This is needed as these angles provide the input to the fish.
+	*Special feature: if you have noticed that the midline covering your fish's body is consistently too short, you can add some coordinates to the fish in the direction of the 10 points prior to the end-point you're adding too. You can also disable this if desired.
+	*ATTENTION: if in the first frame you notice that your fish's midline is flipped, you must go into findEquidistantPointsScript and comment/uncomment the first line with the coordinate flip.
+
+Inputs:
+	*contours (label folder file path)
+	*midline (midline folder file path)
+	*images (image folder file path)
+	*output folder (output folder file path)
+	*output video file path (make one up)
+	*frame frequency
+	*extension lengths (you will have to eyeball this a few times to get a feel for the right amount (and the right direction)
+
+Outputs:
+	*alpha
+	*midlined and segmented video
+	*midlined and segmented images
+
+4. CurveFitting_Run4
+	*Takes the angles calculated in script 3 and fits a sinusoid to them. Returns plots of the fits as well as the r^2 values of them.
+
+Inputs:
+	*alpha
+Outputs:
+	*A (vector of amplitudes)
+	*B (vector of frequencies)
+	*C (vector of phase differences)
+	*r^2 statistics
+
+5. FishSimParametersFile_Run5
+	*Gets the simulation ready for running by initialising all of its variables. This code strives to keep the overall density of the fish in the video the same as that of the fish in the simulation (not including the fins). There also exists code if the user would like to experiment with changing the density distribution, however this relies on the user keeping the fish split up as a head, trunk, and tail, and designating for themselves where those divisions would lie for an X number of segments.
+	*Should be noted that all units are in mm and grams
+	*The segment blocks which make up the body are hexagonal in nature. This code calculates the coordinates of the hexagon required to maintain the same cross-sectional area as the fish in the video while also acknowledging the lack of an ellipse block in simscape.
+
+Inputs:
+	*NumOfSegs
+	*Generic Params (pre-set, but you can toggle with it)
+	*The real fish's body parameters (height, length, width, mass)
+Outputs:
+	*the simulation's various variables
+	*how long to run the simulation for (sim_time)
+
+6. x5Fish_Run6
+	*For the purposes of this file exchange, I have provided a neat version of a five segment fish. Please note that you can add as many segments as you want to it (though you will have to update the sinusoid vector for the additional segments). All you need to do is copy a fishbod block and paste it (the head is not included in these blocks, so subtract 1 from the number of segments you want). Connect any additional blocks in exactly the same manned as the other fishbod blocks have been connected.
+
+Inputs: 
+	*running file 5
+	*Rotation applied to the rigid transform between the world frame and the head
+	*Inputs to the sinusoid which supplies the legs' movements (for frequency count the number of steps it takes (each footstep is one step) and multiply it by pi/sim_time; for phase you will need to experiment to see which phase causes it to start on the correct foot as seen in your original video)
+
+Outputs:
+	*simscape video of fish
+	*Out.	…
+		f_bot_(num)-total force of each segment (frictional and normal)
+		fx(num)- force in the x direction of each segment
+		fy(num)- force in the y direction of each segment
+		out_x(num)- x position of each segment
+		out_y(num)- y position of each segment
+		out_torque(num)- output torque of the revolute joint which causes each segment to move
+		seg(num)- distance moved by each segment wrt world frame
+		contforce(num)-	z acceleration between plane and segment
+	
+
+7. SimResultsAnalysis_Run7
+	*Plots the results gathered in file 6: midline position, x position, y position, the errors between all three (simulation vs video), whether or not a segment is in contact with the ground plane at a given time, and a plot of the rotational energy.
+	*Inputs: the fish's length (all comparison results are wrt body-length)
+	*(Potentially, depending on the orientation of the data from the flipping of coordinates/z-plane rotation, etc) you may have to uncomment the code that makes the x/y data negative (check after running the code if the peaks and troughs align with the video data in the x and y midline comparison graphs).
+
+
+FAQs:
+
+Q: The first file won't run:
+A: Download the 'Better Skeletonization' code from MATLAB. You must first make that run locally on your computer before running anything in here.
+
+Q: How do I generate masks?
+A: This project was run using Roboflow(*) with masks made by placing the SAM auto-generated masks over the fish, and then deleting the fins if they appeared in the image (and occasionally making sure the tail was covered). The mask must precisely cover the fish in order for this code to be effective. 
+
+*Dwyer, B., Nelson, J., Hansen, T., et. al. (2024). Roboflow (Version 1.0) [Software]. Available from https://roboflow.com. computer vision.
+

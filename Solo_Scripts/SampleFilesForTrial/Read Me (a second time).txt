@@ -1,0 +1,16 @@
+Read Me (a second time):
+
+labels=contours
+the files supplied are set up around the idea that this is the fish that you will be testing.
+
+Still, here are some parameters in the event that this file is over-written:
+*framefreq=3
+*extension_length_head=5;
+*extension_length_tail=10;
+*SegmentNum or NumOfSegs=5 (the fish model I supplied was the 5 segment one)
+*fishlength=109 millimetres (10.9cm when running the final script, as its units take in cm)
+*fish_mass_g=7.5
+*fish half width= (1/24)*fishlength
+*fish half height= (1/17.8)*fishlength
+
+Once again, thanks to Roboflow (cited in previous ReadMe) for providing a nice interface to manipulate SAM from.
