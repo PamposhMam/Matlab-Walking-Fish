@@ -6,7 +6,7 @@ The files are:
 1. MidliningFish_Run1
 	This file takes labels you provide (co-ordinates of a mask), calculates a midline for them, and saves them as coordinates in a .txt file for further processing. The generation of the midline is fundamental to using this model.
 	The midline is generated using the 'Better Skeletonization' method, source: Nicholas Howe (2024). Better Skeletonization (https://www.mathworks.com/matlabcentral/fileexchange/11123-better-skeletonization), MATLAB Central File Exchange. Retrieved September 5, 2024.
-
+	The Better Skeletonization file must first be downloaded, run, and added to the folder containing the rest of the walking fish files.
 Inputs:
 	* the original video that was then sampled
 	* framefreq (the frequency with which you've sampled your frames)
